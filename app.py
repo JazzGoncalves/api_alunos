@@ -2,8 +2,7 @@ from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
 import sqlite3
 import os
-from urllib.parse import quote as url_quote
-
+from urllib.parse import quote
 
 
 app = Flask(__name__)
