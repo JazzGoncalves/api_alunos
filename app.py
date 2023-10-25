@@ -1,26 +1,32 @@
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
 import sqlite3
+import os
 
 app = Flask(__name__)
 api = Api(app)
 
-conn = sqlite3.connect('escola.db')
-cursor = conn.cursor()
+def init_db():
+    with app.app_context():
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
 
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS alunos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        idade INTEGER,
-        nota_primeiro_semestre REAL,
-        nota_segundo_semestre REAL,
-        nome_professor TEXT,
-        numero_sala INTEGER
-    )
-''')
-conn.commit()
-conn.close()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS alunos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                idade INTEGER,
+                nota_primeiro_semestre REAL,
+                nota_segundo_semestre REAL,
+                nome_professor TEXT,
+                numero_sala INTEGER
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
+
+init_db()
 
 class AlunoResource(Resource):
     def get(self, aluno_id):
@@ -116,5 +122,11 @@ class AlunosResource(Resource):
 api.add_resource(AlunosResource, '/alunos')
 api.add_resource(AlunoResource, '/alunos/<int:aluno_id>')
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    return "OK", 200
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    debug_mode = os.environ.get('DEBUG_MODE', 'False').lower() == 'true'
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
